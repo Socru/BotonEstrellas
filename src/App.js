@@ -1,71 +1,180 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { faWhatsapp, faTelegramPlane } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import sanityClient from '../client';
+import imageUrlBuilder from '@sanity/image-url';
+import BlockContent from '@sanity/block-content-to-react';
+import { Link } from 'react-router-dom';
+import '../css/OnePost.css';
 
-function Modal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [rating, setRating] = useState(0);
+const builder = imageUrlBuilder(sanityClient);
 
-  const openModal = () => {
-    setIsOpen(true);
-  };
+const urlFor = (source) => {
+    return builder.image(source);
+}
 
-  const closeModal = () => {
-    setIsOpen(false);
-  };
+const OnePost = () => {
+    const [postData, setPostData] = useState(null);
+    const [showLoader, setShowLoader] = useState(true);
+    const { slug } = useParams();
+    const [firstBio, setFirstBio] = useState('');
+    const [secondBio, setSecondBio] = useState('');
+    const [isOpen, setIsOpen] = useState(false);
+    const [rating, setRating] = useState(0);
+    const [comment, setComment] = useState('');
 
-  const handleStarClick = (value) => {
-    setRating(value);
-  };
+    useEffect(() => {
+        sanityClient.fetch(
+            `*[slug.current == $slug]{
+                title,
+                slug,
+                mainImage{
+                    asset->{
+                        _id,
+                        url
+                    }
+                },
+                body,
+                "name": author->name,
+                "bio": author->bio
+            }`,
+            { slug }
+        )
+        .then(data => {
+            setPostData(data[0]);
+            if(data[0].bio && typeof data[0].bio[0].children[0].text === 'string'){
+                const bioArray = data[0].bio[0].children[0].text.split(' ');
+                console.log(bioArray);
+                setFirstBio(bioArray[0]);
+                setSecondBio(bioArray[1]);
+            }else{
+                console.error('No se encontró la bio');
+            }
+        })
+        .catch(err => console.error(err));
+    }, [slug]);
 
-  const handleSubmit = () => {
-    const comment = document.getElementById('comment').value;
-    console.log('Rating:', rating);
-    console.log('Comment:', comment);
-    closeModal();
-  };
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowLoader(false);
+        }, 500);
 
-  return (
-    <div>
-      <button onClick={openModal}>Abrir Modal</button>
-      {isOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={closeModal}>&times;</span>
-            <h2>Evaluación</h2>
-            <div className="star-container">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <span
-                  key={value}
-                  className={value <= rating ? 'star filled' : 'star'}
-                  onClick={() => handleStarClick(value)}
-                >
-                  ★
-                </span>
-              ))}
+        return () => clearTimeout(timer);
+    }, []);
+
+    const openModal = () => {
+        setIsOpen(true);
+    };
+
+    const closeModal = () => {
+        setIsOpen(false);
+    };
+
+    const handleStarClick = (value) => {
+        setRating(value);
+    };
+
+    const handleCommentChange = (e) => {
+        setComment(e.target.value);
+    };
+
+    const handleSubmit = () => {
+        console.log('Rating:', rating);
+        console.log('Comment:', comment);
+        closeModal();
+    };
+
+    if (showLoader || !postData || !postData.title) {
+        return( 
+        <>
+            <div className='ratoncillo'>
+                <div aria-label="Orange and tan hamster running in a metal wheel" role="img" className="wheel-and-hamster">
+                    <div className="wheel"></div>
+                    <div className="hamster">
+                        <div className="hamster__body">
+                            <div className="hamster__head">
+                                <div className="hamster__ear"></div>
+                                <div className="hamster__eye"></div>
+                                <div className="hamster__nose"></div>
+                            </div>
+                            <div className="hamster__limb hamster__limb--fr"></div>
+                            <div className="hamster__limb hamster__limb--fl"></div>
+                            <div className="hamster__limb hamster__limb--br"></div>
+                            <div className="hamster__limb hamster__limb--bl"></div>
+                            <div className="hamster__tail"></div>
+                        </div>
+                    </div>
+                    <div className="spoke"></div>
+                </div>
             </div>
-            <div>
-              <label htmlFor="comment" className="comment-label">Deja tus comentarios:</label>
-              <textarea id="comment" className="comment-textarea"></textarea>
-            </div>
+        </>);
+    }
 
-            <div className="button-container">
-              <button className="close-button" onClick={closeModal}>Cerrar</button>
-              <button className="submit-button" onClick={handleSubmit}>Enviar</button>
+    return (
+        <div className='container23' style={{ animation: 'fadeIn 1s ease-in' }}>
+            <div className="ss2">
+                <h1 style={{display:'flex', justifyContent:'center', alignContent:'center'}}>{postData.title}</h1>
+                <div style={{display:'flex', justifyContent:'center', marginTop: '20px'}}>
+                    <Link to="/" style={{ textDecoration: "none"}}>
+                        <button>Regresar</button>
+                    </Link>
+                    <button onClick={openModal}>Evaluar</button>
+                </div>
             </div>
-          </div>
+            <div className="ss3">
+                <div style={{display:'flex', justifyContent:'center'}}>
+                <img src={urlFor(postData.mainImage).url()} style={{ objectFit:'cover'}}  alt='Imagen_UTMita' width="250" height="250"/>
+                </div>
+                <div style={{display:'flex', justifyContent:'center'}}>
+                <h2>{postData.name}</h2>
+                </div>
+            </div>
+            <div className="ss">
+                <h3 style={{display:'flex', justifyContent:'center', textAlign:'center'}}>Materias o cursos que puedo impartir:</h3>
+                <div style={{display:'flex', justifyContent:'center', textAlign:'center'}} >
+                    <BlockContent blocks={postData.body} />
+                </div>
+            </div>
+            <div className="ss4">
+                <div className="icon">
+                    <a className='whats' href={`https://wa.me/521${firstBio}?text=Buen%20d%C3%ADa,%20quise%20contactarlo%20por%20un%20curso/materia.`} target="_blank" rel='noreferrer' aria-label="Whatsapp">
+                        <span><FontAwesomeIcon icon={faWhatsapp} /></span>
+                    </a>
+                    <a className='mail' href={`mailto:${secondBio}`} aria-label="Correo">
+                        <span><FontAwesomeIcon icon={faTelegramPlane} /></span>
+                    </a>
+                </div>
+            </div>
+            {isOpen && (
+                <div className="modal" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
+                    <div className="modal-content" style={{ color: 'white', backgroundColor: 'black', padding: '20px', borderRadius: '10px', position: 'relative', width: '50%', maxWidth: '600px' }}>
+                        <span className="close" onClick={closeModal} style={{ position: 'absolute', top: '0', right: '0', cursor: 'pointer', padding: '8px', color: '#fff' }}>&times;</span>
+                        <h2>Vamos a evaluar el curso</h2>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                            {[...Array(5)].map((_, index) => (
+                                <span
+                                    key={index}
+                                    className={index < rating ? 'star filled' : 'star'}
+                                    onClick={() => handleStarClick(index + 1)}
+                                    style={{ cursor: 'pointer', fontSize: '24px', color: index < rating ? 'gold' : 'grey' }}
+                                >
+                                    ★
+                                </span>
+                            ))}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
+                            <label htmlFor="comment" className="comment-label" style={{ color: '#fff' }}>Deja tus comentarios:</label>
+                            <textarea id="comment" className="comment-textarea" value={comment} onChange={handleCommentChange} style={{ backgroundColor: '#333', color: '#fff', border: '1px solid #fff' }}></textarea>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                            <button onClick={handleSubmit}>Enviar evaluación</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    )
 }
 
-function App() {
-  return (
-    <div className="App">
-      <h1>Modal con Calificación de Estrellas</h1>
-      <Modal />
-    </div>
-  );
-}
-
-export default App;
+export default OnePost;
