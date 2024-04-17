@@ -518,3 +518,55 @@
   border: none;
   cursor: pointer;
 }
+
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.modal-content {
+  color: white;
+  background-color: black;
+  padding: 20px;
+  border-radius: 10px;
+  position: relative;
+  width: 50%;
+  max-width: 600px;
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  padding: 8px;
+  color: #fff;
+}
+
+.star {
+  cursor: pointer;
+  font-size: 48px;
+  color: grey;
+}
+
+.star.filled {
+  color: gold;
+}
+
+.comment-label {
+  color: #fff;
+}
+
+.comment-textarea {
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #fff;
+}
