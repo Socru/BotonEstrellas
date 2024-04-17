@@ -6,7 +6,7 @@ import sanityClient from '../client';
 import imageUrlBuilder from '@sanity/image-url';
 import BlockContent from '@sanity/block-content-to-react';
 import { Link } from 'react-router-dom';
-import '../css/OnePost.css';
+import '../css/OnePost.css'; // Importa tus estilos generales si es necesario
 
 const builder = imageUrlBuilder(sanityClient);
 
@@ -147,27 +147,39 @@ const OnePost = () => {
                 </div>
             </div>
             {isOpen && (
-                <div className="modal" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
-                    <div className="modal-content" style={{ color: 'white', backgroundColor: 'black', padding: '20px', borderRadius: '10px', position: 'relative', width: '50%', maxWidth: '600px' }}>
-                        <span className="close" onClick={closeModal} style={{ position: 'absolute', top: '0', right: '0', cursor: 'pointer', padding: '8px', color: '#fff' }}>&times;</span>
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close" onClick={closeModal}>&times;</span>
                         <h2>Vamos a evaluar el curso</h2>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                        <div className="star-container">
                             {[...Array(5)].map((_, index) => (
                                 <span
                                     key={index}
                                     className={index < rating ? 'star filled' : 'star'}
                                     onClick={() => handleStarClick(index + 1)}
-                                    style={{ cursor: 'pointer', fontSize: '24px', color: index < rating ? 'gold' : 'grey' }}
-                                >
+                                > 
+
                                     ★
+                                
                                 </span>
                             ))}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
-                            <label htmlFor="comment" className="comment-label" style={{ color: '#fff' }}>Deja tus comentarios:</label>
-                            <textarea id="comment" className="comment-textarea" value={comment} onChange={handleCommentChange} style={{ backgroundColor: '#333', color: '#fff', border: '1px solid #fff' }}></textarea>
+                        <div className="rating-text">
+                            {rating !== 0 && (
+                                <>
+                                    {rating === 1 && <p>Realmente malo</p>}
+                                    {rating === 2 && <p>No lo recomiendo</p>}
+                                    {rating === 3 && <p>Regular</p>}
+                                    {rating === 4 && <p>Muy bien</p>}
+                                    {rating === 5 && <p>Excelente</p>}
+                                </>
+                            )}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                        <div className="comment-container">
+                            <label htmlFor="comment" className="comment-label">Deja tus comentarios:</label>
+                            <textarea id="comment" className="comment-textarea" value={comment} onChange={handleCommentChange}></textarea>
+                        </div>
+                        <div className="button-container">
                             <button onClick={handleSubmit}>Enviar evaluación</button>
                         </div>
                     </div>
